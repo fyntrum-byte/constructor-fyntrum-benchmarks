@@ -1,0 +1,27 @@
+# ─────────────────────────────────────────────────────────────
+# Datos crudos de la SCVS — NUNCA subir
+# bi_ranking.csv pesa ~373 MB. GitHub rechaza archivos de más
+# de 100 MB, y por encima de 50 MB ya lanza advertencia.
+# Se descargan de nuevo cada mayo; no hay razón para versionarlos.
+# ─────────────────────────────────────────────────────────────
+*.csv
+bi_*.csv
+muestra_*.csv
+
+# ─────────────────────────────────────────────────────────────
+# Salida del constructor.
+# Pesa ~1 MB y sí se puede versionar — permite comparar cómo se
+# movió cada sector año contra año. Si prefieres no subirlo,
+# descomenta la línea siguiente.
+# ─────────────────────────────────────────────────────────────
+# bm_real.js
+
+# Sistema y herramientas
+.DS_Store
+Thumbs.db
+desktop.ini
+node_modules/
+.vscode/
+.idea/
+*.log
+~$*
