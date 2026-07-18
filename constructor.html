@@ -1,0 +1,641 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Fyntrum — Constructor de Benchmarks SCVS v1.0</title>
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&family=Nunito+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.31.0/dist/tabler-icons.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{background:#050505;min-height:100%}
+body{font-family:'Nunito Sans',sans-serif;color:#e2e0da;font-size:13px;padding-bottom:60px}
+.top{background:#0b0b0b;border-bottom:1px solid #1c1c1c;display:flex;align-items:center;justify-content:space-between;padding:0 20px;height:52px;position:sticky;top:0;z-index:200}
+.logo-wrap{display:flex;align-items:center;gap:10px}
+.logo-icon{width:28px;height:28px;background:linear-gradient(135deg,#F97316,#1E3A5F);border-radius:6px;display:flex;align-items:center;justify-content:center;font-family:'Montserrat',sans-serif;font-weight:800;font-size:12px;color:#fff}
+.logo-name{font-family:'Montserrat',sans-serif;font-weight:800;font-size:15px;letter-spacing:0.04em}
+.logo-name .o{color:#F97316}
+.logo-tag{font-size:9px;color:#333;letter-spacing:0.14em;text-transform:uppercase;font-family:'Montserrat',sans-serif}
+.top-center{font-family:'Montserrat',sans-serif;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.14em;color:#2a2a2a}
+.wrap{max-width:1080px;margin:0 auto;padding:18px;display:flex;flex-direction:column;gap:14px}
+.card{background:#0b0b0b;border:1px solid #1c1c1c;border-radius:7px;padding:16px}
+.sec{display:flex;align-items:center;gap:7px;margin-bottom:12px}
+.sec i{color:#F97316;font-size:15px}
+.sec-t{font-family:'Montserrat',sans-serif;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.12em}
+.sec-n{font-family:'Montserrat',sans-serif;font-size:9px;font-weight:700;color:#F97316;background:rgba(249,115,22,0.1);border:1px solid rgba(249,115,22,0.25);border-radius:3px;padding:2px 6px;letter-spacing:0.1em}
+.hint{font-size:10px;color:#3a3a3a;line-height:1.6;margin-top:8px}
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.g4{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
+@media(max-width:760px){.g2,.g4{grid-template-columns:1fr}}
+/* dropzones */
+.dz{background:#0f0f0f;border:1px dashed #262626;border-radius:6px;padding:16px;cursor:pointer;transition:all .15s;position:relative}
+.dz:hover{border-color:#F97316;background:#111}
+.dz.over{border-color:#F97316;background:rgba(249,115,22,0.06)}
+.dz.ok{border-style:solid;border-color:#16a34a;background:rgba(22,163,74,0.05)}
+.dz-n{font-family:'Montserrat',sans-serif;font-size:11px;font-weight:700;color:#e2e0da;margin-bottom:3px;display:flex;align-items:center;gap:6px}
+.dz-d{font-size:10px;color:#3a3a3a;line-height:1.5}
+.dz-f{font-size:10px;color:#16a34a;margin-top:6px;font-weight:600;word-break:break-all}
+.dz input{position:absolute;opacity:0;width:1px;height:1px}
+.dz:focus-within{border-color:#F97316;box-shadow:0 0 0 2px rgba(249,115,22,0.25)}
+.btn:focus-visible,.btn-g:focus-visible,.inp:focus-visible{outline:2px solid #F97316;outline-offset:2px}
+/* rules */
+.f-lbl{font-size:8px;color:#333;text-transform:uppercase;letter-spacing:0.1em;font-weight:700;font-family:'Montserrat',sans-serif;display:block;margin-bottom:4px}
+.inp{background:#111;border:1px solid #1a1a1a;color:#e2e0da;padding:7px 9px;border-radius:4px;font-family:'Nunito Sans',sans-serif;font-size:12px;width:100%;outline:none;transition:border-color .15s}
+.inp:focus{border-color:#F97316}
+select.inp{appearance:none;cursor:pointer;background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='10' height='6'><path d='M0 0l5 6 5-6z' fill='%23555'/></svg>");background-repeat:no-repeat;background-position:right 9px center;padding-right:26px}
+select.inp option{background:#111;color:#e2e0da}
+.chk{display:flex;align-items:center;gap:7px;font-size:11px;color:#888;cursor:pointer;padding:7px 0}
+.chk input{accent-color:#F97316;width:14px;height:14px;cursor:pointer}
+/* button */
+.btn{background:linear-gradient(135deg,#F97316,#c85a0a);border:none;color:#fff;padding:11px 24px;border-radius:5px;font-family:'Montserrat',sans-serif;font-size:10px;font-weight:700;letter-spacing:0.12em;text-transform:uppercase;cursor:pointer;display:inline-flex;align-items:center;gap:7px;transition:opacity .15s}
+.btn:disabled{opacity:.3;cursor:not-allowed}
+.btn-g{background:none;border:1px solid #222;color:#555;padding:8px 15px;border-radius:4px;font-family:'Montserrat',sans-serif;font-size:9px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;cursor:pointer;display:inline-flex;align-items:center;gap:5px;transition:all .15s}
+.btn-g:hover{border-color:#F97316;color:#F97316}
+/* FUNNEL — signature */
+.fn{display:flex;flex-direction:column;gap:2px}
+.fn-row{display:flex;align-items:center;gap:12px;padding:7px 10px;border-radius:4px;background:#0f0f0f;border:1px solid #161616;position:relative;overflow:hidden}
+.fn-bar{position:absolute;left:0;top:0;bottom:0;background:linear-gradient(90deg,rgba(249,115,22,0.16),rgba(249,115,22,0.03));transition:width .25s ease;z-index:0}
+.fn-row.drop .fn-bar{background:linear-gradient(90deg,rgba(220,38,38,0.14),rgba(220,38,38,0.02))}
+.fn-row.keep .fn-bar{background:linear-gradient(90deg,rgba(22,163,74,0.16),rgba(22,163,74,0.03))}
+.fn-l{flex:1;z-index:1;min-width:0}
+.fn-n{font-family:'Montserrat',sans-serif;font-size:10px;font-weight:700;color:#9a9a9a}
+.fn-d{font-size:9px;color:#333}
+.fn-v{z-index:1;font-family:'Montserrat',sans-serif;font-size:13px;font-weight:700;color:#e2e0da;text-align:right;white-space:nowrap}
+.fn-row.drop .fn-v{color:#dc2626}
+.fn-row.keep .fn-v{color:#16a34a}
+.fn-p{z-index:1;font-size:9px;color:#3a3a3a;width:46px;text-align:right;white-space:nowrap}
+.prog{height:3px;background:#161616;border-radius:2px;overflow:hidden;margin-top:12px}
+.prog-b{height:100%;background:linear-gradient(90deg,#F97316,#c85a0a);width:0;transition:width .2s}
+.stat{font-size:10px;color:#444;margin-top:7px;font-family:'Montserrat',sans-serif;letter-spacing:0.05em}
+/* results */
+.mc{background:#0f0f0f;border:1px solid #181818;border-radius:5px;padding:11px;border-top:2px solid #F97316}
+.mc-n{font-size:9px;color:#555;text-transform:uppercase;letter-spacing:0.1em;font-family:'Montserrat',sans-serif;font-weight:700;margin-bottom:5px}
+.mc-v{font-family:'Montserrat',sans-serif;font-size:19px;font-weight:800;color:#F97316}
+.mc-d{font-size:9px;color:#2f2f2f;margin-top:4px;line-height:1.5}
+table{width:100%;border-collapse:collapse;font-size:11px}
+th{font-family:'Montserrat',sans-serif;font-size:8px;text-transform:uppercase;letter-spacing:0.1em;color:#333;text-align:left;padding:6px 8px;border-bottom:1px solid #1c1c1c;font-weight:700}
+td{padding:6px 8px;border-bottom:1px solid #121212;color:#8a8a8a}
+td.num{text-align:right;font-family:'Montserrat',sans-serif;font-weight:600;color:#c9c7c1}
+tr:hover td{background:#0f0f0f}
+.out{background:#0a0a0a;border:1px solid #1a1a1a;border-radius:5px;color:#5a7a5a;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:10px;width:100%;height:220px;padding:11px;outline:none;resize:vertical;line-height:1.5}
+.err{background:rgba(220,38,38,0.07);border:1px solid rgba(220,38,38,0.3);border-radius:5px;padding:11px;font-size:11px;color:#f87171;line-height:1.6}
+.warn{background:rgba(217,119,6,0.06);border:1px solid rgba(217,119,6,0.25);border-radius:5px;padding:11px;font-size:10px;color:#b98a4a;line-height:1.6}
+.hide{display:none}
+.pill{display:inline-block;font-size:8px;font-family:'Montserrat',sans-serif;font-weight:700;letter-spacing:0.08em;padding:2px 6px;border-radius:3px;text-transform:uppercase}
+.pill-c{background:rgba(30,58,95,0.4);color:#7eb8ff;border:1px solid rgba(30,58,95,0.8)}
+.pill-s{background:rgba(217,119,6,0.12);color:#d97706;border:1px solid rgba(217,119,6,0.3)}
+.foot{text-align:center;font-size:9px;color:#1e1e1e;font-family:'Montserrat',sans-serif;line-height:1.7;padding:20px}
+@media (prefers-reduced-motion: reduce){*{transition:none!important;animation:none!important}html{scroll-behavior:auto}}
+</style>
+</head>
+<body>
+
+<div class="top">
+  <div class="logo-wrap">
+    <div class="logo-icon">F</div>
+    <div>
+      <div class="logo-name">FYN<span class="o">TRUM</span></div>
+      <div class="logo-tag">Inteligencia en Inversiones</div>
+    </div>
+  </div>
+  <div class="top-center">Constructor de Benchmarks · SCVS</div>
+  <div class="top-center">v1.0</div>
+</div>
+
+<div class="wrap">
+
+  <!-- PASO 1 -->
+  <div class="card">
+    <div class="sec"><span class="sec-n">01</span><i class="ti ti-file-download"></i><div class="sec-t">Archivos de la SCVS</div></div>
+    <div class="g2">
+      <label class="dz" id="dz-rank">
+        <div class="dz-n"><i class="ti ti-table"></i> bi_ranking.csv</div>
+        <div class="dz-d">Cifras financieras de todas las compañías, todos los ejercicios. ~370 MB. Arrastra el archivo o haz clic.</div>
+        <div class="dz-f hide" id="f-rank"></div>
+        <input type="file" id="in-rank" accept=".csv,text/csv">
+      </label>
+      <label class="dz" id="dz-ciiu">
+        <div class="dz-n"><i class="ti ti-list-tree"></i> bi_ciiu.csv</div>
+        <div class="dz-d">Catálogo de actividades económicas. Da los nombres legibles que van en tu informe.</div>
+        <div class="dz-f hide" id="f-ciiu"></div>
+        <input type="file" id="in-ciiu" accept=".csv,text/csv">
+      </label>
+    </div>
+    <div class="hint">Los segmentos (Microempresa / Pequeña / Mediana / Grande) están dentro del código — son 5 valores fijos. <b>bi_compania.csv no hace falta</b>: no aporta nada a la agregación por actividad y tamaño. Guárdalo para cuando agreguemos la dimensión provincia.</div>
+  </div>
+
+  <!-- PASO 2 -->
+  <div class="card">
+    <div class="sec"><span class="sec-n">02</span><i class="ti ti-adjustments"></i><div class="sec-t">Reglas de limpieza</div></div>
+    <div class="g4">
+      <div>
+        <label class="f-lbl">Ejercicio a procesar</label>
+        <input class="inp" id="r-anio" value="2025" inputmode="numeric">
+      </div>
+      <div>
+        <label class="f-lbl">Piso de ventas ($)</label>
+        <input class="inp" id="r-piso" value="10000" inputmode="numeric">
+      </div>
+      <div>
+        <label class="f-lbl">Muestra mínima (n)</label>
+        <input class="inp" id="r-min" value="30" inputmode="numeric">
+      </div>
+      <div>
+        <label class="f-lbl">Detalle de actividad</label>
+        <select class="inp" id="r-depth">
+          <option value="clase">Clase — máximo detalle</option>
+          <option value="grupo" selected>Grupo — recomendado</option>
+          <option value="division">División — más liviano</option>
+        </select>
+      </div>
+    </div>
+    <div class="g4" style="margin-top:10px">
+      <div>
+        <label class="f-lbl">Outliers</label>
+        <label class="chk"><input type="checkbox" id="r-wins" checked> Winsorizar p1–p99</label>
+      </div>
+    </div>
+    <div class="hint">
+      <b>Ejercicio:</b> 2025 es el más reciente y está completo (151.778 compañías). Si sale con huecos, usa 2024.<br>
+      <b>Piso de ventas:</b> descarta cascarones y compañías sin operación. Con $0 entran decenas de miles de empresas fantasma y los rangos salen deformados.<br>
+      <b>Muestra mínima:</b> si un grupo no llega a este número, no se publica — el dashboard sube un nivel de actividad hasta encontrar uno que sí. Bajarlo de 30 es comparar a tu cliente contra un puñado de empresas y presentarlo como si fuera el sector.<br>
+      <b>Winsorizar:</b> recorta el 1% de cada extremo antes de calcular. Sin esto, una sola empresa con datos absurdos te mueve los percentiles.<br>
+      <b>Detalle de actividad:</b> hasta dónde baja el árbol CIIU. <i>Clase</i> es lo más preciso ("Venta al por menor de alimentos") pero duplica el peso del archivo. <i>Grupo</i> da casi la misma precisión a la mitad de peso. <i>División</i> es para cuando el archivo tiene que ser chico. Sea cual sea, el dashboard siempre puede subir de nivel si un grupo no llega a la muestra mínima.
+    </div>
+    <div style="margin-top:14px;display:flex;align-items:center;gap:12px;flex-wrap:wrap">
+      <button class="btn" id="go" disabled><i class="ti ti-player-play"></i> Construir benchmarks</button>
+      <div class="stat" id="ready">Faltan los dos archivos</div>
+    </div>
+    <div class="prog hide" id="prog"><div class="prog-b" id="prog-b"></div></div>
+    <div class="err hide" id="err" style="margin-top:12px"></div>
+  </div>
+
+  <!-- EMBUDO -->
+  <div class="card hide" id="c-fn">
+    <div class="sec"><span class="sec-n">03</span><i class="ti ti-filter"></i><div class="sec-t">Embudo de limpieza</div></div>
+    <div class="fn" id="fn"></div>
+    <div class="hint" id="fn-note">Cada fila que cae aquí es una empresa que habría ensuciado tus rangos.</div>
+  </div>
+
+  <!-- RESULTADOS -->
+  <div class="card hide" id="c-res">
+    <div class="sec"><span class="sec-n">04</span><i class="ti ti-chart-dots-3"></i><div class="sec-t">Cobertura</div></div>
+    <div class="g4" id="kpis"></div>
+    <div style="margin-top:16px">
+      <div class="f-lbl" style="color:#F97316;margin-bottom:8px">Grupos con más empresas</div>
+      <div style="overflow-x:auto"><table id="t-top"></table></div>
+    </div>
+  </div>
+
+  <!-- SALIDA -->
+  <div class="card hide" id="c-out">
+    <div class="sec"><span class="sec-n">05</span><i class="ti ti-code"></i><div class="sec-t">Salida para el dashboard</div></div>
+    <div class="warn" style="margin-bottom:12px">
+      <b>Cómo se usa:</b> descarga el archivo y pega su contenido en <code>index.html</code> del CFA, justo debajo de <code>const BM</code>. No borres <code>BM</code> todavía — los múltiplos EV/EBITDA siguen viniendo de ahí, porque no existen en la fuente de la SCVS. La integración con <code>sig()</code> es el siguiente paso y va aparte.
+    </div>
+    <div style="display:flex;gap:8px;margin-bottom:10px;flex-wrap:wrap">
+      <button class="btn-g" id="dl"><i class="ti ti-download"></i> Descargar bm_real.js</button>
+      <button class="btn-g" id="cp"><i class="ti ti-copy"></i> Copiar al portapapeles</button>
+      <div class="stat" id="size" style="margin-left:auto"></div>
+    </div>
+    <textarea class="out" id="out" readonly spellcheck="false"></textarea>
+  </div>
+
+  <div class="foot">
+    Fyntrum · Constructor de Benchmarks v1.0 — Herramienta interna<br>
+    Fuente: Superintendencia de Compañías, Valores y Seguros del Ecuador
+  </div>
+</div>
+
+<script>
+/* ══════════════════════════════════════════════════════════════
+   CATÁLOGO DE SEGMENTOS — confirmado en bi_segmento.csv
+   ══════════════════════════════════════════════════════════════ */
+const SEG = {1:'MICROEMPRESA', 2:'PEQUEÑA', 3:'MEDIANA', 4:'GRANDE'};
+// El 0 (NO DEFINIDO) se descarta a propósito.
+
+/* ══════════════════════════════════════════════════════════════
+   RATIOS — recalculados desde las cifras ABSOLUTAS de la SCVS.
+   Los ratios que la SCVS ya trae calculados (margen_operacional,
+   cobertura_interes, roe, roa, rent_neta_ventas, per_med_cobranza)
+   están rotos: dan 0.00 para empresas rentables, y convierten
+   pérdidas reales en rentabilidades positivas. No se usan.
+   Excepción: liquidez_corriente y prueba_acida, que no se pueden
+   recalcular porque la fuente no publica activo/pasivo corriente.
+   ══════════════════════════════════════════════════════════════ */
+const RATIOS = [
+  {k:'mcPct',    n:'Margen de contribución', f:d => d.v>0 ? (d.v-d.cvp)/d.v : null},
+  {k:'rentOp',   n:'Rentabilidad operativa', f:d => d.v>0 ? d.uaii/d.v : null},
+  {k:'rentNeta', n:'Rentabilidad neta',      f:d => d.v>0 ? d.un/d.v : null},
+  {k:'gao',      n:'GAO',                    f:d => (d.uaii>0 && d.mc>0) ? d.mc/d.uaii : null},
+  {k:'gaf',      n:'GAF',                    f:d => (d.uaii>0 && d.uai>0) ? d.uaii/d.uai : null},
+  {k:'gat',      n:'GAT',                    f:d => (d.uaii>0 && d.mc>0 && d.uai>0) ? (d.mc/d.uaii)*(d.uaii/d.uai) : null},
+  {k:'covInt',   n:'Cobertura de intereses', f:d => d.gf>0 ? d.uaii/d.gf : null},
+  {k:'ende',     n:'Endeudamiento',          f:d => d.act>0 ? (d.act-d.pat)/d.act : null},
+  {k:'roa',      n:'ROA',                    f:d => d.act>0 ? d.un/d.act : null},
+  {k:'roe',      n:'ROE',                    f:d => d.pat>0 ? d.un/d.pat : null},
+  {k:'mgEbitda', n:'Margen EBITDA',          f:d => d.v>0 ? (d.uaii+d.dep+d.amo)/d.v : null},
+  {k:'ventasEmp',n:'Ventas por empleado',    f:d => d.emp>0 ? d.v/d.emp : null, dec:0},
+  {k:'rc',       n:'Razón corriente',        f:d => (d.liq>0 && isFinite(d.liq)) ? d.liq : null, src:'scvs'},
+  {k:'pAcida',   n:'Prueba ácida',           f:d => (d.pa>0 && isFinite(d.pa)) ? d.pa : null, src:'scvs'},
+];
+
+/* ── estado ── */
+let fRank=null, fCiiu=null, ciiuMap=null, JSON_OUT='';
+
+/* ── helpers ── */
+const $ = id => document.getElementById(id);
+const num = s => { const x = parseFloat(s); return isFinite(x) ? x : 0; };
+const fmt = n => n.toLocaleString('es-EC');
+const round = (x,d=4) => { const m=Math.pow(10,d); return Math.round(x*m)/m; };
+
+function percentile(sorted, p){
+  if(!sorted.length) return null;
+  if(sorted.length===1) return sorted[0];
+  const i = (sorted.length-1)*p, lo = Math.floor(i), hi = Math.ceil(i);
+  return lo===hi ? sorted[lo] : sorted[lo] + (sorted[hi]-sorted[lo])*(i-lo);
+}
+
+function showErr(msg){ $('err').textContent = msg; $('err').classList.remove('hide'); }
+function hideErr(){ $('err').classList.add('hide'); }
+
+/* ── dropzones ── */
+function wireDrop(dzId, inId, fileId, cb){
+  const dz=$(dzId), inp=$(inId), lbl=$(fileId);
+  const accept = f => {
+    if(!f) return;
+    cb(f);
+    lbl.textContent = f.name + ' · ' + (f.size/1048576).toFixed(1) + ' MB';
+    lbl.classList.remove('hide');
+    dz.classList.add('ok'); dz.classList.remove('over');
+    checkReady();
+  };
+  inp.addEventListener('change', e => accept(e.target.files[0]));
+  ['dragenter','dragover'].forEach(ev => dz.addEventListener(ev, e => { e.preventDefault(); dz.classList.add('over'); }));
+  ['dragleave','drop'].forEach(ev => dz.addEventListener(ev, e => { e.preventDefault(); if(ev==='dragleave') dz.classList.remove('over'); }));
+  dz.addEventListener('drop', e => { e.preventDefault(); accept(e.dataTransfer.files[0]); });
+}
+wireDrop('dz-rank','in-rank','f-rank', f => fRank=f);
+wireDrop('dz-ciiu','in-ciiu','f-ciiu', f => fCiiu=f);
+
+function checkReady(){
+  const ok = fRank && fCiiu;
+  $('go').disabled = !ok;
+  $('ready').textContent = ok ? 'Listo para construir' : (fRank ? 'Falta bi_ciiu.csv' : (fCiiu ? 'Falta bi_ranking.csv' : 'Faltan los dos archivos'));
+}
+
+/* ══════════════════════════════════════════════════════════════
+   CATÁLOGO CIIU — el archivo viene malformado:
+   "A              ,""AGRICULTURA, GANADERÍA, SILVICULTURA Y PESCA.""";;;
+   Un parser CSV normal se atraganta. Se limpia a mano.
+   ══════════════════════════════════════════════════════════════ */
+function parseCiiu(text){
+  const map = {};
+  const lines = text.split(/\r?\n/);
+  for(let i=1; i<lines.length; i++){
+    let l = lines[i];
+    if(!l || !l.trim()) continue;
+    l = l.replace(/;+\s*$/, '').trim();
+    if(l.startsWith('"') && l.endsWith('"')) l = l.slice(1,-1).replace(/""/g,'"');
+    const c = l.indexOf(',');
+    if(c < 0) continue;
+    let code = l.slice(0,c).trim();
+    let desc = l.slice(c+1).trim();
+    if(desc.startsWith('"') && desc.endsWith('"')) desc = desc.slice(1,-1).replace(/""/g,'"');
+    desc = desc.replace(/\s+/g,' ').replace(/\.$/,'').trim();
+    if(code) map[code] = desc;
+  }
+  return map;
+}
+
+/* ── niveles CIIU: ciiu_n6 llega como "G4711.01" ── */
+const DEPTH = {clase:0, grupo:1, division:2};
+const levels = (c6, depth) => {
+  const c = (c6||'').trim();
+  if(!c) return [];
+  return [c.slice(0,5), c.slice(0,4), c.slice(0,3), c.slice(0,1)]
+    .slice(DEPTH[depth] || 0)
+    .filter(x => x && x.length >= 1)
+    .filter((x,i,a) => a.indexOf(x)===i);
+};
+
+/* ── embudo ── */
+const FUNNEL = [
+  {k:'scan',  n:'Filas escaneadas',        d:'Todo el archivo, 18 ejercicios'},
+  {k:'anio',  n:'Del ejercicio elegido',   d:'El resto se descarta de inmediato'},
+  {k:'noSeg', n:'Sin segmento o sin CIIU', d:'No se pueden clasificar', drop:true},
+  {k:'piso',  n:'Bajo el piso de ventas',  d:'Cascarones y empresas sin operación', drop:true},
+  {k:'pat',   n:'Patrimonio ≤ 0',          d:'Revientan el ROE con valores absurdos', drop:true},
+  {k:'act',   n:'Activos ≤ 0',             d:'Balance inconsistente', drop:true},
+  {k:'ok',    n:'Empresas válidas',        d:'Las que construyen tus rangos', keep:true},
+];
+function renderFunnel(c, base){
+  $('fn').innerHTML = FUNNEL.map(s => {
+    const v = c[s.k]||0;
+    const pct = base ? (v/base*100) : 0;
+    return `<div class="fn-row ${s.drop?'drop':''} ${s.keep?'keep':''}">
+      <div class="fn-bar" style="width:${Math.min(100,pct)}%"></div>
+      <div class="fn-l"><div class="fn-n">${s.n}</div><div class="fn-d">${s.d}</div></div>
+      <div class="fn-v">${fmt(v)}</div>
+      <div class="fn-p">${base?pct.toFixed(1)+'%':''}</div>
+    </div>`;
+  }).join('');
+}
+
+/* ══════════════════════════════════════════════════════════════
+   PROCESO
+   ══════════════════════════════════════════════════════════════ */
+$('go').addEventListener('click', async () => {
+  hideErr();
+  const anio = $('r-anio').value.trim();
+  const piso = num($('r-piso').value);
+  const minN = Math.max(1, parseInt($('r-min').value) || 30);
+  const wins = $('r-wins').checked;
+  const depth = $('r-depth').value;
+
+  if(!/^\d{4}$/.test(anio)){ showErr('El ejercicio debe ser un año de 4 dígitos, por ejemplo 2025.'); return; }
+
+  $('go').disabled = true;
+  $('prog').classList.remove('hide');
+  $('c-fn').classList.remove('hide');
+  $('c-res').classList.add('hide');
+  $('c-out').classList.add('hide');
+  $('ready').textContent = 'Leyendo catálogo de actividades…';
+
+  /* 1. catálogo CIIU */
+  try {
+    const txt = await fCiiu.text();
+    ciiuMap = parseCiiu(txt);
+    if(Object.keys(ciiuMap).length < 10) throw new Error('El catálogo salió casi vacío.');
+  } catch(e){
+    showErr('No se pudo leer bi_ciiu.csv: ' + e.message + ' Verifica que sea el archivo correcto.');
+    $('go').disabled = false; return;
+  }
+  $('ready').textContent = 'Recorriendo bi_ranking.csv…';
+
+  /* 2. streaming del ranking */
+  const C = {scan:0, anio:0, noSeg:0, piso:0, pat:0, act:0, ok:0};
+  const rows = [];
+  let IX = null, headerErr = null;
+  const need = ['anio','ingresos_ventas','costos_ventas_prod','gastos_admin_ventas','gastos_financieros',
+                'utilidad_an_imp','utilidad_neta','activos','patrimonio','depreciaciones','amortizaciones',
+                'n_empleados','cod_segmento','ciiu_n6','liquidez_corriente','prueba_acida'];
+
+  Papa.parse(fRank, {
+    chunkSize: 12 * 1024 * 1024,
+    skipEmptyLines: true,
+    chunk: (res, parser) => {
+      let data = res.data;
+      if(!IX){
+        const hdr = data[0].map(h => (h||'').trim().toLowerCase());
+        IX = {};
+        need.forEach(n => { IX[n] = hdr.indexOf(n); });
+        const missing = need.filter(n => IX[n] < 0);
+        if(missing.length){ headerErr = missing; parser.abort(); return; }
+        data = data.slice(1);
+      }
+      for(let i=0; i<data.length; i++){
+        const r = data[i];
+        if(r.length < 20) continue;
+        C.scan++;
+        if(r[IX.anio] !== anio) continue;
+        C.anio++;
+
+        const seg = parseInt(r[IX.cod_segmento]);
+        const c6  = (r[IX.ciiu_n6]||'').trim();
+        if(!SEG[seg] || !c6){ C.noSeg++; continue; }
+
+        const v = num(r[IX.ingresos_ventas]);
+        if(!(v > piso)){ C.piso++; continue; }
+        const pat = num(r[IX.patrimonio]);
+        if(!(pat > 0)){ C.pat++; continue; }
+        const act = num(r[IX.activos]);
+        if(!(act > 0)){ C.act++; continue; }
+
+        const cvp = num(r[IX.costos_ventas_prod]);
+        const gav = num(r[IX.gastos_admin_ventas]);
+        const mc  = v - cvp;
+        const d = {
+          v, cvp, gav, mc, uaii: mc - gav,
+          uai: num(r[IX.utilidad_an_imp]),
+          un:  num(r[IX.utilidad_neta]),
+          gf:  num(r[IX.gastos_financieros]),
+          act, pat,
+          dep: num(r[IX.depreciaciones]),
+          amo: num(r[IX.amortizaciones]),
+          emp: num(r[IX.n_empleados]),
+          liq: parseFloat(r[IX.liquidez_corriente]),
+          pa:  parseFloat(r[IX.prueba_acida]),
+        };
+        const vals = RATIOS.map(rt => { const x = rt.f(d); return (x !== null && isFinite(x)) ? x : null; });
+        rows.push({ c6, seg, vals });
+        C.ok++;
+      }
+      const cur = res.meta.cursor || 0;
+      $('prog-b').style.width = Math.min(100, cur / fRank.size * 100) + '%';
+      renderFunnel(C, C.scan);
+      $('ready').textContent = fmt(C.scan) + ' filas leídas · ' + fmt(C.ok) + ' válidas';
+    },
+    complete: () => {
+      if(headerErr){
+        showErr('A bi_ranking.csv le faltan columnas: ' + headerErr.join(', ') + '. ¿Es el archivo correcto de la SCVS?');
+        $('go').disabled = false; $('prog').classList.add('hide'); return;
+      }
+      $('prog-b').style.width = '100%';
+      renderFunnel(C, C.scan);
+      if(!C.ok){
+        showErr('Ninguna empresa pasó los filtros para el ejercicio ' + anio + '. Revisa el año (2025 y 2024 tienen datos completos; los anteriores a 2015 vienen incompletos) o baja el piso de ventas.');
+        $('go').disabled = false; return;
+      }
+      $('ready').textContent = 'Agregando por actividad y tamaño…';
+      setTimeout(() => aggregate(rows, C, {anio, piso, minN, wins, depth}, ciiuMap), 40);
+    },
+    error: e => {
+      showErr('Error leyendo bi_ranking.csv: ' + e.message);
+      $('go').disabled = false; $('prog').classList.add('hide');
+    }
+  });
+});
+
+/* ══════════════════════════════════════════════════════════════
+   AGREGACIÓN
+   ══════════════════════════════════════════════════════════════ */
+function aggregate(rows, C, cfg, cmap){
+  cmap = cmap || {};
+  /* 1. winsorizar por ratio, global */
+  const clips = RATIOS.map((rt, i) => {
+    if(!cfg.wins) return null;
+    const vals = [];
+    for(const r of rows) if(r.vals[i] !== null) vals.push(r.vals[i]);
+    if(vals.length < 100) return null;
+    vals.sort((a,b) => a-b);
+    return [percentile(vals, 0.01), percentile(vals, 0.99)];
+  });
+  if(cfg.wins){
+    for(const r of rows){
+      for(let i=0; i<RATIOS.length; i++){
+        const c = clips[i];
+        if(c && r.vals[i] !== null) r.vals[i] = Math.min(c[1], Math.max(c[0], r.vals[i]));
+      }
+    }
+  }
+
+  /* 2. acumular en todos los niveles a la vez (clase→grupo→división→sección + TODOS) */
+  const G = new Map();
+  const bucket = key => {
+    let g = G.get(key);
+    if(!g){ g = { n:0, v: RATIOS.map(() => []) }; G.set(key, g); }
+    return g;
+  };
+  for(const r of rows){
+    const keys = levels(r.c6, cfg.depth).map(l => l + '|' + r.seg);
+    keys.push('TODOS|' + r.seg);
+    for(const k of keys){
+      const g = bucket(k);
+      g.n++;
+      for(let i=0; i<RATIOS.length; i++) if(r.vals[i] !== null) g.v[i].push(r.vals[i]);
+    }
+  }
+
+  /* 3. percentiles, solo grupos y ratios con muestra suficiente */
+  const out = {}, usados = new Set();
+  let nGrupos = 0;
+  for(const [key, g] of G){
+    if(g.n < cfg.minN) continue;
+    const R = {};
+    let any = false;
+    for(let i=0; i<RATIOS.length; i++){
+      const vals = g.v[i];
+      if(vals.length < cfg.minN) continue;
+      vals.sort((a,b) => a-b);
+      const dc = RATIOS[i].dec === undefined ? 3 : RATIOS[i].dec;
+      R[RATIOS[i].k] = [
+        round(percentile(vals,0.10),dc), round(percentile(vals,0.25),dc), round(percentile(vals,0.50),dc),
+        round(percentile(vals,0.75),dc), round(percentile(vals,0.90),dc), vals.length
+      ];
+      any = true;
+    }
+    if(!any) continue;
+    out[key] = { n: g.n, r: R };
+    nGrupos++;
+    const code = key.split('|')[0];
+    if(code !== 'TODOS') usados.add(code);
+  }
+
+  /* 4. solo las descripciones CIIU que se usan */
+  const ciiu = {};
+  for(const c of usados) if(cmap[c]) ciiu[c] = cmap[c];
+
+  const BM = {
+    meta: {
+      fuente: 'Superintendencia de Compañías, Valores y Seguros del Ecuador (SCVS)',
+      ejercicio: parseInt(cfg.anio),
+      generado: new Date().toISOString().slice(0,10),
+      filas_escaneadas: C.scan,
+      filas_del_ejercicio: C.anio,
+      empresas_validas: C.ok,
+      grupos_publicados: nGrupos,
+      reglas: {
+        piso_ventas: cfg.piso, patrimonio_minimo: 0, activos_minimo: 0,
+        muestra_minima: cfg.minN, winsorizado: cfg.wins ? 'p1-p99' : 'no',
+        detalle_actividad: cfg.depth
+      },
+      metodologia: 'Ratios recalculados desde las cifras absolutas publicadas por la SCVS, con las mismas fórmulas que usa el CFA. Los ratios ya calculados por la fuente (margen_operacional, cobertura_interes, roe, roa, rent_neta_ventas, per_med_cobranza) no se usan: contienen errores y convierten pérdidas reales en rentabilidades positivas. Excepción: rc y pAcida provienen directamente de la fuente porque no publica activo y pasivo corriente.',
+      clave: 'CODIGO_CIIU|SEGMENTO — buscar de lo específico a lo general: clase (5) → grupo (4) → división (3) → sección (1) → TODOS.',
+      valores: '[p10, p25, p50, p75, p90, n]',
+      segmentos: SEG
+    },
+    ciiu,
+    g: out
+  };
+
+  JSON_OUT = 'const BM_REAL = ' + JSON.stringify(BM) + ';\n';
+  renderResults(BM, C, cfg);
+}
+
+/* ══════════════════════════════════════════════════════════════
+   RESULTADOS
+   ══════════════════════════════════════════════════════════════ */
+function renderResults(BM, C, cfg){
+  const kb = new Blob([JSON_OUT]).size / 1024;
+
+  const porSeg = {};
+  for(const k in BM.g){
+    const [code, s] = k.split('|');
+    if(code === 'TODOS') porSeg[s] = BM.g[k].n;
+  }
+  const cobertura = Object.keys(SEG).map(s =>
+    `${SEG[s].slice(0,4)} ${fmt(porSeg[s]||0)}`).join(' · ');
+
+  $('kpis').innerHTML = [
+    ['Empresas válidas', fmt(C.ok), `De ${fmt(C.anio)} que presentaron balances en ${cfg.anio}. Se descartó el ${((1-C.ok/(C.anio||1))*100).toFixed(0)}%.`],
+    ['Grupos publicados', fmt(BM.meta.grupos_publicados), `Combinaciones de actividad × tamaño con al menos ${cfg.minN} empresas.`],
+    ['Actividades cubiertas', fmt(Object.keys(BM.ciiu).length), 'Códigos CIIU con nombre legible listo para el informe.'],
+    ['Peso del archivo', kb.toFixed(0) + ' KB', 'Va embebido en index.html. Sin servidor, sin costo mensual.'],
+  ].map(([n,v,d]) => `<div class="mc"><div class="mc-n">${n}</div><div class="mc-v">${v}</div><div class="mc-d">${d}</div></div>`).join('');
+
+  const top = Object.entries(BM.g)
+    .filter(([k]) => !k.startsWith('TODOS'))
+    .sort((a,b) => b[1].n - a[1].n).slice(0, 15);
+
+  $('t-top').innerHTML = `<thead><tr>
+      <th>Actividad</th><th>Nivel</th><th>Tamaño</th><th style="text-align:right">Empresas</th>
+      <th style="text-align:right">Rent. neta p50</th><th style="text-align:right">ROE p50</th>
+      <th style="text-align:right">Endeud. p50</th></tr></thead><tbody>` +
+    top.map(([k, g]) => {
+      const [code, s] = k.split('|');
+      const niv = {1:'Sección', 3:'División', 4:'Grupo', 5:'Clase'}[code.length] || '—';
+      const desc = BM.ciiu[code] || code;
+      const val = (key, pctFmt) => {
+        const r = g.r[key];
+        if(!r) return '<span style="color:#2a2a2a">—</span>';
+        return pctFmt ? (r[2]*100).toFixed(1) + '%' : r[2].toFixed(2);
+      };
+      return `<tr>
+        <td title="${code}">${desc.length>44 ? desc.slice(0,44)+'…' : desc}</td>
+        <td><span class="pill pill-c">${niv}</span></td>
+        <td><span class="pill pill-s">${SEG[s]}</span></td>
+        <td class="num">${fmt(g.n)}</td>
+        <td class="num">${val('rentNeta', true)}</td>
+        <td class="num">${val('roe', true)}</td>
+        <td class="num">${val('ende', true)}</td>
+      </tr>`;
+    }).join('') + '</tbody>';
+
+  $('fn-note').innerHTML = `Cada fila que cae aquí es una empresa que habría ensuciado tus rangos. Cobertura final por tamaño: <b style="color:#888">${cobertura}</b>.`;
+
+  $('out').value = JSON_OUT.length > 240000
+    ? JSON_OUT.slice(0, 240000) + '\n\n/* … recortado en pantalla. Usa "Descargar" para el archivo completo. */'
+    : JSON_OUT;
+  $('size').textContent = kb.toFixed(0) + ' KB · ' + fmt(BM.meta.grupos_publicados) + ' grupos';
+
+  $('c-res').classList.remove('hide');
+  $('c-out').classList.remove('hide');
+  $('ready').textContent = 'Listo';
+  $('go').disabled = false;
+  $('c-out').scrollIntoView({behavior:'smooth', block:'start'});
+}
+
+/* ── descargar / copiar ── */
+$('dl').addEventListener('click', () => {
+  const b = new Blob([JSON_OUT], {type:'text/javascript'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(b);
+  a.download = 'bm_real.js';
+  a.click();
+  URL.revokeObjectURL(a.href);
+});
+$('cp').addEventListener('click', async () => {
+  try {
+    await navigator.clipboard.writeText(JSON_OUT);
+    $('cp').innerHTML = '<i class="ti ti-check"></i> Copiado';
+    setTimeout(() => $('cp').innerHTML = '<i class="ti ti-copy"></i> Copiar al portapapeles', 1800);
+  } catch(e){
+    $('out').select();
+    showErr('El navegador bloqueó el portapapeles. El texto quedó seleccionado: usa Ctrl+C, o descarga el archivo.');
+  }
+});
+</script>
+</body>
+</html>
