@@ -229,8 +229,8 @@ const RATIOS = [
   {k:'rentOp',   n:'Rentabilidad operativa', f:d => d.v>0 ? d.uaii/d.v : null},
   {k:'rentNeta', n:'Rentabilidad neta',      f:d => d.v>0 ? d.un/d.v : null},
   {k:'gao',      n:'GAO',                    f:d => (d.uaii>0 && d.mc>0) ? d.mc/d.uaii : null},
-  {k:'gaf',      n:'GAF',                    f:d => (d.uaii>0 && d.uai>0) ? d.uaii/d.uai : null},
-  {k:'gat',      n:'GAT',                    f:d => (d.uaii>0 && d.mc>0 && d.uai>0) ? (d.mc/d.uaii)*(d.uaii/d.uai) : null},
+  {k:'gaf',      n:'GAF',                    f:d => (d.uaii>0 && d.uapt>0) ? d.uaii/d.uapt : null},
+  {k:'gat',      n:'GAT',                    f:d => (d.uaii>0 && d.mc>0 && d.uapt>0) ? (d.mc/d.uaii)*(d.uaii/d.uapt) : null},
   {k:'covInt',   n:'Cobertura de intereses', f:d => d.gf>0 ? d.uaii/d.gf : null},
   {k:'ende',     n:'Endeudamiento',          f:d => d.act>0 ? (d.act-d.pat)/d.act : null},
   {k:'roa',      n:'ROA',                    f:d => d.act>0 ? d.un/d.act : null},
@@ -416,11 +416,17 @@ $('go').addEventListener('click', async () => {
         const cvp = num(r[IX.costos_ventas_prod]);
         const gav = num(r[IX.gastos_admin_ventas]);
         const mc  = v - cvp;
+        const uaii = mc - gav;
+        const gf   = num(r[IX.gastos_financieros]);
         const d = {
-          v, cvp, gav, mc, uaii: mc - gav,
+          v, cvp, gav, mc, uaii,
+          // uapt = utilidad ANTES de participación de trabajadores = UAII − gastos financieros.
+          // El GAF debe usar esta base, igual que el CFA. La SCVS reporta utilidad_an_imp
+          // ya NETA del 15%, así que usarla directo inflaría el GAF ~17,6%.
+          uapt: uaii - gf,
           uai: num(r[IX.utilidad_an_imp]),
           un:  num(r[IX.utilidad_neta]),
-          gf:  num(r[IX.gastos_financieros]),
+          gf,
           act, pat,
           dep: num(r[IX.depreciaciones]),
           amo: num(r[IX.amortizaciones]),
